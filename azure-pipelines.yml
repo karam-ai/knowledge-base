@@ -1,0 +1,28 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+  - script: curl -LsSf https://astral.sh/uv/install.sh | sh
+    displayName: Install uv
+  - script: |
+      export PATH="$HOME/.local/bin:$PATH"
+      uv sync --extra dev --locked
+      uv run pytest -W ignore::DeprecationWarning -W ignore::UserWarning
+      uv run python -m compileall -q src examples databricks
+      uv build
+    displayName: Test and build Python package
+  - task: GoTool@0
+    inputs:
+      version: '1.23.0'
+  - script: cd go && go test ./... && go build ./cmd/kgcheck
+    displayName: Test Go health client
+  - script: docker build -t podcast-knowledge-graph-api:ci .
+    displayName: Build container
+  - script: docker compose config
+    displayName: Validate Compose

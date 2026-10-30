@@ -1,0 +1,23 @@
+{
+  "source_id": "sample-episode-1",
+  "title": "Semantic Systems: A Demonstration",
+  "language": "en",
+  "source_uri": "https://example.org/episodes/semantic-systems",
+  "metadata": {
+    "license": "CC0-1.0",
+    "speaker": "Example Speaker",
+    "note": "Synthetic sample data supplied with the project"
+  },
+  "passages": [
+    {
+      "start": "00:00:00",
+      "end": "00:00:20",
+      "text": "Palantir uses an ontology to connect operational concepts with source data."
+    },
+    {
+      "start": "00:00:21",
+      "end": "00:00:40",
+      "text": "SPARQL can query RDF relationships while preserving passage-level provenance."
+    }
+  ]
+}

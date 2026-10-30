@@ -1,0 +1,17 @@
+PREFIX pk: <https://github.com/karam-ai/knowledge-base/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX schema: <https://schema.org/>
+
+SELECT ?episode ?title ?start ?end ?text
+WHERE {
+  ?episode a pk:Episode ;
+           schema:name ?title ;
+           pk:hasPassage ?passage .
+  ?passage pk:mentions ?entity ;
+           pk:startTimestamp ?start ;
+           pk:endTimestamp ?end ;
+           pk:text ?text .
+  ?entity pk:normalizedLabel ?label .
+  FILTER(CONTAINS(LCASE(STR(?label)), LCASE("ontology")))
+}
+LIMIT 50

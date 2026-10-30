@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+.env
+data/
+*.sqlite3
+*.nq
+*.enc
+.coverage
+htmlcov/

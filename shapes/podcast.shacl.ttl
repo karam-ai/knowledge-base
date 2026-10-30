@@ -1,0 +1,15 @@
+@prefix pk: <https://github.com/karam-ai/knowledge-base/ontology#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+pk:PassageShape a sh:NodeShape ;
+  sh:targetClass pk:Passage ;
+  sh:property [ sh:path pk:startTimestamp ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path pk:endTimestamp ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path pk:text ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path pk:textSha256 ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path prov:wasDerivedFrom ; sh:minCount 1 ] .
+
+pk:EntityShape a sh:NodeShape ;
+  sh:targetObjectsOf pk:mentions ;
+  sh:property [ sh:path pk:normalizedLabel ; sh:minCount 1 ; sh:maxCount 1 ] .

@@ -1,0 +1,36 @@
+@prefix pk: <https://github.com/karam-ai/knowledge-base/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+
+pk:PodcastOntology a owl:Ontology ;
+  rdfs:label "Podcast knowledge graph ontology" .
+
+pk:Episode a owl:Class ; rdfs:subClassOf schema:PodcastEpisode .
+pk:Passage a owl:Class .
+pk:Claim a owl:Class .
+pk:EntityMention a owl:Class .
+pk:ExtractionRun a owl:Class ; rdfs:subClassOf prov:Activity .
+pk:Person a owl:Class ; rdfs:subClassOf schema:Person .
+pk:Organization a owl:Class ; rdfs:subClassOf schema:Organization .
+pk:Technology a owl:Class .
+pk:Topic a owl:Class .
+
+pk:hasPassage a owl:ObjectProperty ; rdfs:domain pk:Episode ; rdfs:range pk:Passage .
+pk:mentions a owl:ObjectProperty ; rdfs:domain pk:Passage .
+pk:inPassage a owl:ObjectProperty ; rdfs:range pk:Passage .
+pk:refersTo a owl:ObjectProperty .
+pk:videoId a owl:DatatypeProperty .
+pk:startTimestamp a owl:DatatypeProperty .
+pk:endTimestamp a owl:DatatypeProperty .
+pk:text a owl:DatatypeProperty .
+pk:textSha256 a owl:DatatypeProperty .
+pk:sourcePath a owl:DatatypeProperty .
+pk:normalizedLabel a owl:DatatypeProperty .
+pk:mentionSurface a owl:DatatypeProperty .
+pk:startChar a owl:DatatypeProperty .
+pk:endChar a owl:DatatypeProperty .
+pk:confidence a owl:DatatypeProperty .
+pk:extractor a owl:DatatypeProperty .

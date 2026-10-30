@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podcast-kg-api
+  namespace: podcast-kg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: podcast-kg-api
+  template:
+    metadata:
+      labels:
+        app: podcast-kg-api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: api
+          image: ghcr.io/karam-ai/knowledge-base:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PODCAST_KG_DATA_DIR
+              value: /data
+            - name: PODCAST_KG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: podcast-kg-api
+                  key: api-key
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: podcast-kg-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: podcast-kg-api
+  namespace: podcast-kg
+spec:
+  selector:
+    app: podcast-kg-api
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: ClusterIP

@@ -1,0 +1,10 @@
+PREFIX pk: <https://github.com/karam-ai/knowledge-base/ontology#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+
+SELECT ?passage ?source ?run
+WHERE {
+  ?passage a pk:Passage ;
+           prov:wasDerivedFrom ?source ;
+           prov:wasGeneratedBy ?run .
+}
+LIMIT 100

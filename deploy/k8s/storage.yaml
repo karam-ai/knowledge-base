@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podcast-kg
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: podcast-kg-data
+  namespace: podcast-kg
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi

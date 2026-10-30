@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - run: uv sync --extra dev --locked
+      - run: uv run pytest -W ignore::DeprecationWarning -W ignore::UserWarning
+      - run: uv run python -m compileall -q src examples databricks
+      - run: uv build
+      - run: cd go && go test ./... && go build ./cmd/kgcheck
+      - run: docker build -t podcast-knowledge-graph-api:ci .
+      - run: docker compose config

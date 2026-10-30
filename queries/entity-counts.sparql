@@ -1,0 +1,10 @@
+PREFIX pk: <https://github.com/karam-ai/knowledge-base/ontology#>
+
+SELECT ?type (COUNT(DISTINCT ?entity) AS ?entities)
+WHERE {
+  ?passage pk:mentions ?entity .
+  ?entity a ?type .
+  FILTER(STRSTARTS(STR(?type), STR(pk:)))
+}
+GROUP BY ?type
+ORDER BY DESC(?entities)

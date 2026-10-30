@@ -1,0 +1,25 @@
+bundle:
+  name: podcast-knowledge-graph-api
+
+variables:
+  existing_cluster_id:
+    description: Existing Databricks cluster ID
+  input_path:
+    default: dbfs:/FileStore/podcast-kg/passages.jsonl
+  output_path:
+    default: dbfs:/FileStore/podcast-kg/delta
+
+resources:
+  jobs:
+    podcast_graph_job:
+      name: podcast-knowledge-graph-transform
+      tasks:
+        - task_key: transform
+          existing_cluster_id: ${var.existing_cluster_id}
+          spark_python_task:
+            python_file: ./databricks/podcast_graph_job.py
+            parameters:
+              - --input
+              - ${var.input_path}
+              - --output
+              - ${var.output_path}
