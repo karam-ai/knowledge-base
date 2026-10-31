@@ -47,7 +47,8 @@ Interactive OpenAPI documentation is available at `/docs` after the server start
 | `GET` | `/v1/documents` | List document metadata |
 | `GET` | `/v1/vocabulary` | List the controlled entity vocabulary |
 | `PUT` | `/v1/vocabulary` | Replace the controlled vocabulary |
-| `POST` | `/v1/documents` | Create or replace a document and its passages |
+| `POST` | `/v1/documents` | Create or replace a document from structured passages |
+| `POST` | `/v1/transcripts` | Parse and ingest a complete SRT episode transcript |
 | `DELETE` | `/v1/documents/{source_id}` | Delete one document |
 | `POST` | `/v1/search` | SQLite FTS5 evidence retrieval |
 | `POST` | `/v1/graph/rebuild` | Rebuild the RDF named-graph dataset |
@@ -75,6 +76,32 @@ python examples/api_client.py --api-key "$PODCAST_KG_API_KEY"
 ```
 
 Then open `http://127.0.0.1:8000/docs`.
+
+## Ingest a complete podcast transcript
+
+`POST /v1/transcripts` accepts an SRT transcript and converts each subtitle cue into a timestamped passage. Use a stable episode identifier such as an RSS GUID or YouTube video ID. Posting the same `source_id` again replaces that episode.
+
+```bash
+jq -Rs '{
+  source_id: "example-podcast-episode-42",
+  title: "Episode 42: Knowledge graphs",
+  language: "en",
+  source_uri: "https://example.org/episodes/42",
+  metadata: {podcast: "Example Podcast"},
+  format: "srt",
+  transcript: .
+}' episode-42.srt | curl -X POST http://127.0.0.1:8000/v1/transcripts \
+  -H 'Content-Type: application/json' \
+  -H "X-API-Key: $PODCAST_KG_API_KEY" \
+  --data-binary @-
+```
+
+After uploading one or more episodes, rebuild the graph once:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/graph/rebuild \
+  -H "X-API-Key: $PODCAST_KG_API_KEY"
+```
 
 ## Local Python development
 
@@ -159,7 +186,7 @@ uv run pytest -W ignore::DeprecationWarning -W ignore::UserWarning
 bash scripts/ci.sh
 ```
 
-The API tests cover ingestion, idempotent replacement, optional API-key protection, search, graph rebuilding, RAG context, exports, SPARQL restrictions and deletion.
+The API tests cover structured ingestion, SRT transcript ingestion, idempotent replacement, optional API-key protection, search, graph rebuilding, RAG context, exports, SPARQL restrictions and deletion.
 
 ## Privacy and content rights
 

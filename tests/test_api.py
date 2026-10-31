@@ -80,6 +80,61 @@ def test_standalone_api_ingest_search_graph_rag_and_delete(tmp_path: Path) -> No
     assert final_stats.json()["documents"] == 0
 
 
+def test_timestamped_transcript_endpoint_ingests_srt(tmp_path: Path) -> None:
+    payload = {
+        "source_id": "new-podcast-episode",
+        "title": "New podcast episode",
+        "language": "en",
+        "source_uri": "https://example.org/podcasts/new-episode",
+        "metadata": {"podcast": "Example Podcast"},
+        "format": "srt",
+        "transcript": (
+            "1\n"
+            "00:00:05,000 --> 00:00:12,500\n"
+            "The guest explains the knowledge graph.\n\n"
+            "2\n"
+            "00:00:13,000 --> 00:00:20,000\n"
+            "FastAPI exposes the transcript through an API.\n"
+        ),
+    }
+
+    with client_for(tmp_path) as client:
+        ingested = client.post("/v1/transcripts", json=payload)
+        search = client.post(
+            "/v1/search", json={"query": "FastAPI transcript", "limit": 5}
+        )
+
+    assert ingested.status_code == 201
+    assert ingested.json() == {
+        "source_id": "new-podcast-episode",
+        "created": True,
+        "passage_count": 2,
+        "transcript_format": "srt",
+        "graph_status": "rebuild-required",
+    }
+    assert search.json()["passages"][0]["start"] == "00:00:13.000"
+    assert search.json()["passages"][0]["end"] == "00:00:20.000"
+    assert "FastAPI exposes" in search.json()["passages"][0]["text"]
+
+
+def test_transcript_endpoint_rejects_non_srt_text(tmp_path: Path) -> None:
+    payload = {
+        "source_id": "invalid-transcript",
+        "title": "Invalid transcript",
+        "language": "en",
+        "format": "srt",
+        "transcript": "This text has no SRT timestamps.",
+    }
+
+    with client_for(tmp_path) as client:
+        response = client.post("/v1/transcripts", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "The transcript contains no valid SRT subtitle passages"
+    )
+
+
 def test_document_upsert_is_idempotent(tmp_path: Path) -> None:
     with client_for(tmp_path) as client:
         first = client.post("/v1/documents", json=sample_document())

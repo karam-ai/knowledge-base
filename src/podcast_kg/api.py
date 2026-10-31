@@ -18,6 +18,7 @@ from .config import Settings
 from .graph import build_dataset, load_dataset
 from .nlp import extract_entities
 from .rag import build_context_packet
+from .source import parse_srt_transcript
 from .storage import Store
 
 READ_QUERY = re.compile(
@@ -39,6 +40,16 @@ class DocumentInput(BaseModel):
     source_uri: str | None = Field(default=None, max_length=4_000)
     metadata: dict[str, Any] = Field(default_factory=dict)
     passages: list[PassageInput] = Field(min_length=1, max_length=50_000)
+
+
+class TranscriptInput(BaseModel):
+    source_id: str = Field(min_length=1, max_length=512, pattern=r"^[^\x00]+$")
+    title: str = Field(min_length=1, max_length=2_000)
+    language: str = Field(min_length=2, max_length=32)
+    source_uri: str | None = Field(default=None, max_length=4_000)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    format: Literal["srt"] = "srt"
+    transcript: str = Field(min_length=1, max_length=10_000_000)
 
 
 class SearchRequest(BaseModel):
@@ -193,6 +204,37 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/v1/documents", tags=["documents"])
     def list_documents() -> dict[str, object]:
         return {"documents": store.list_documents()}
+
+    @app.post(
+        "/v1/transcripts",
+        tags=["documents"],
+        dependencies=[Depends(authorize_write)],
+    )
+    def ingest_transcript(
+        transcript: TranscriptInput,
+        response: Response,
+    ) -> dict[str, object]:
+        try:
+            passages = parse_srt_transcript(transcript.transcript)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        created = store.upsert_document(
+            source_id=transcript.source_id,
+            title=transcript.title,
+            language=transcript.language,
+            source_uri=transcript.source_uri,
+            metadata=transcript.metadata,
+            passages=passages,
+        )
+        invalidate_graph()
+        response.status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return {
+            "source_id": transcript.source_id,
+            "created": created,
+            "passage_count": len(passages),
+            "transcript_format": transcript.format,
+            "graph_status": "rebuild-required",
+        }
 
     @app.post("/v1/documents", tags=["documents"], dependencies=[Depends(authorize_write)])
     def ingest_document(
