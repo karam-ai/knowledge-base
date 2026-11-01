@@ -805,6 +805,7 @@
         </a>
         <nav class="nav-links">
           <a href="#search" class="nav-link active" data-nav="search">Search</a>
+          <a href="#ask" class="nav-link" data-nav="ask">Ask AI</a>
           <a href="#transcripts" class="nav-link" data-nav="transcripts">Transcripts</a>
           <a href="#sparql" class="nav-link" data-nav="sparql">SPARQL</a>
           <a href="#rag" class="nav-link" data-nav="rag">RAG Context</a>
@@ -850,6 +851,7 @@
       <!-- Tabs for main features -->
       <div class="tabs" id="featureTabs" role="tablist" aria-label="Features">
         <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-search" data-tab="search">Search Passages</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-ask" data-tab="ask">Ask AI</button>
         <button class="tab" role="tab" aria-selected="false" aria-controls="panel-transcripts" data-tab="transcripts">Upload Transcript</button>
         <button class="tab" role="tab" aria-selected="false" aria-controls="panel-sparql" data-tab="sparql">SPARQL Query</button>
         <button class="tab" role="tab" aria-selected="false" aria-controls="panel-rag" data-tab="rag">RAG Context</button>
@@ -883,6 +885,22 @@
           <div class="spinner"></div>
           Searching…
         </div>
+      </section>
+
+      <!-- Answer Panel -->
+      <section class="section tab-panel" id="panel-ask" role="tabpanel" style="display: none;">
+        <div class="section-header"><div>
+          <h2 class="section-title">Ask the podcast evidence</h2>
+          <p class="section-description">A local LLM drafts findings; each quote and timestamp is checked against a retrieved transcript passage. This is not independent fact verification.</p>
+        </div></div>
+        <form class="rag-form" id="answerForm">
+          <label class="form-label" for="answerQuestion">Your question</label>
+          <input class="form-input" id="answerQuestion" required placeholder="What did guests say about predictive maintenance?">
+          <button class="btn btn-primary" type="submit" style="margin-top: 16px;">Generate cited answer</button>
+          <p class="form-help">Local model responses can take a minute. Search is lexical; multilingual and semantic retrieval are planned.</p>
+        </form>
+        <div id="answerStatus" role="status" style="margin-top: 16px;"></div>
+        <div id="answerResults" class="results" aria-live="polite"></div>
       </section>
 
       <!-- Transcript Upload Panel -->
@@ -1015,6 +1033,7 @@ SELECT (COUNT(?p) AS ?count) WHERE { ?p a pkg:Passage }"></textarea>
     const API_BASE = '';
     const TAB_PANELS = {
       search: 'panel-search',
+      ask: 'panel-ask',
       transcripts: 'panel-transcripts',
       sparql: 'panel-sparql',
       rag: 'panel-rag'
@@ -1189,6 +1208,45 @@ SELECT (COUNT(?p) AS ?count) WHERE { ?p a pkg:Passage }"></textarea>
       } catch (err) {
         hideLoading(searchLoading);
         showError(uploadError, err.message);
+      }
+    });
+
+    // Answer: render untrusted transcript/model text with textContent only.
+    document.getElementById('answerForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const question = document.getElementById('answerQuestion').value.trim();
+      const status = document.getElementById('answerStatus');
+      const results = document.getElementById('answerResults');
+      if (!question) return;
+      results.replaceChildren();
+      results.classList.remove('visible');
+      status.textContent = 'Retrieving passages and asking the local model…';
+      try {
+        const data = await apiPost('/v1/answer', {question, limit: 3});
+        if (data.status !== 'answered') {
+          status.textContent = data.answer;
+          return;
+        }
+        status.textContent = data.note;
+        data.findings.forEach((finding, index) => {
+          const card = document.createElement('article');
+          card.className = 'result-card';
+          const statement = document.createElement('p');
+          statement.className = 'result-text';
+          statement.textContent = `${index + 1}. ${finding.text}`;
+          const quote = document.createElement('blockquote');
+          quote.className = 'result-text';
+          quote.textContent = `“${finding.quote}”`;
+          const cite = document.createElement('p');
+          cite.className = 'result-meta';
+          const c = finding.citation;
+          cite.textContent = `${c.episode} · ${c.start}–${c.end} · ${c.language} · ${c.source_id}`;
+          card.append(statement, quote, cite);
+          results.append(card);
+        });
+        results.classList.add('visible');
+      } catch (error) {
+        status.textContent = `Answer unavailable: ${error.message}`;
       }
     });
 

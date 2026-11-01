@@ -54,6 +54,7 @@ Interactive OpenAPI documentation is available at `/docs` after the server start
 | `POST` | `/v1/graph/rebuild` | Rebuild the RDF named-graph dataset |
 | `POST` | `/v1/sparql` | Read-only `SELECT` or `ASK` SPARQL |
 | `POST` | `/v1/rag/context` | Search plus graph-enriched evidence packet |
+| `POST` | `/v1/answer` | Local Ollama answer with checked quotes and timestamp citations |
 | `GET` | `/v1/exports/passages.jsonl` | Download passages for Spark/Databricks |
 | `GET` | `/v1/exports/graph.nq` | Download the generated N-Quads graph |
 
@@ -161,6 +162,16 @@ The generated RDF dataset uses episode-level named graphs and PROV-O links. The 
 ## Graph-assisted RAG
 
 `POST /v1/rag/context` performs lexical retrieval and attaches graph entities to each passage. The response includes passage IDs, timestamps, text, citation labels and an `evidence-only` policy. It does not call an external language model or silently convert podcast statements into verified facts.
+
+`POST /v1/answer` retrieves lexical matches and asks a local Ollama model for structured, quoted findings. It returns server-checked quote substrings, passage IDs, episode titles, languages and timestamp ranges, or abstains when no supported quote is produced. The model may still paraphrase poorly; review the original excerpt before consequential use. By default, Ollama runs at `http://127.0.0.1:11434` using `llama3.1:latest`; set `PODCAST_KG_OLLAMA_MODEL` and `PODCAST_KG_OLLAMA_URL` to select a local model/server. The server must be running and the model pulled before calling the answer endpoint. An external URL would transmit selected transcript excerpts to that provider; do not configure one without reviewing rights and privacy. On CPU the model can take a minute or time out.
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/answer \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"What did the interviewee say about predictive maintenance?","limit":3}'
+```
+
+See `docs/product-journey-and-evaluation.md` for the proposed GCC industrial-intelligence wedge, researcher/admin journey, and retrieval/model evaluation procedure. This is a product hypothesis, not a deployed commercial service.
 
 ## Deployment and data tooling
 

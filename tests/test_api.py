@@ -45,6 +45,7 @@ def test_frontend_is_served_at_root(tmp_path: Path) -> None:
     assert "/v1/search" in response.text
     assert "/v1/transcripts" in response.text
     assert "/v1/sparql" in response.text
+    assert "/v1/answer" in response.text
 
 
 def test_standalone_api_ingest_search_graph_rag_and_delete(tmp_path: Path) -> None:
@@ -145,6 +146,104 @@ def test_transcript_endpoint_rejects_non_srt_text(tmp_path: Path) -> None:
     assert response.json()["detail"] == (
         "The transcript contains no valid SRT subtitle passages"
     )
+
+
+def test_answer_returns_verified_quote_with_timestamp(tmp_path: Path, monkeypatch) -> None:
+    import podcast_kg.api as api_module
+
+    monkeypatch.setattr(
+        api_module,
+        "generate_answer",
+        lambda question, passages: {
+            "findings": [
+                {
+                    "text": "The guest describes an ontology connecting data.",
+                    "passage_id": passages[0]["passage_id"],
+                    "quote": "uses an ontology to connect data",
+                }
+            ]
+        },
+    )
+    with client_for(tmp_path) as client:
+        client.post("/v1/documents", json=sample_document())
+        response = client.post(
+            "/v1/answer", json={"question": "How is ontology used?", "limit": 5}
+        )
+    assert response.status_code == 200
+    item = response.json()["findings"][0]
+    assert "ontology" in item["text"]
+    assert item["quote"] == "uses an ontology to connect data"
+    assert item["citation"]["episode"] == "Semantic systems"
+    assert item["citation"]["start"] == "00:01:00"
+    assert item["citation"]["end"] == "00:01:30"
+    assert item["citation"]["passage_id"]
+    assert response.json()["status"] == "answered"
+
+
+def test_answer_rejects_invented_quote(tmp_path: Path, monkeypatch) -> None:
+    import podcast_kg.api as api_module
+
+    monkeypatch.setattr(
+        api_module,
+        "generate_answer",
+        lambda question, passages: {"findings": [{
+            "text": "A fabricated claim", "passage_id": passages[0]["passage_id"],
+            "quote": "fabricated words not in the source",
+        }]},
+    )
+    with client_for(tmp_path) as client:
+        client.post("/v1/documents", json=sample_document())
+        response = client.post("/v1/answer", json={"question": "ontology"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "insufficient_evidence"
+    assert response.json()["findings"] == []
+
+
+def test_answer_with_no_retrieval_abstains_without_model(tmp_path: Path, monkeypatch) -> None:
+    import podcast_kg.api as api_module
+
+    def should_not_call_model(question, passages):
+        raise AssertionError("The model should not run without evidence")
+
+    monkeypatch.setattr(api_module, "generate_answer", should_not_call_model)
+    with client_for(tmp_path) as client:
+        response = client.post("/v1/answer", json={"question": "unmatchedunique"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "insufficient_evidence"
+
+
+def test_answering_limits_model_context_to_relevant_excerpt(monkeypatch) -> None:
+    import podcast_kg.answering as answering
+
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"message": {"content": '{"findings": []}'}}
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def post(self, url, json):
+            captured["payload"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr(answering.httpx, "Client", FakeClient)
+    passage = {"passage_id": "p1", "text": "A" * 6000 + " ontology insight " + "B" * 6000, "title": "Long episode"}
+    answering.generate_answer("ontology", [passage])
+    prompt = captured["payload"]["messages"][1]["content"]
+    assert "ontology insight" in prompt
+    assert len(prompt) < 4000
 
 
 def test_document_upsert_is_idempotent(tmp_path: Path) -> None:

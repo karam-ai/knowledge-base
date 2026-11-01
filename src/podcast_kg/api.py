@@ -4,6 +4,8 @@ import json
 import os
 import re
 import tempfile
+import httpx
+from pydantic import ValidationError
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
@@ -15,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from rdflib import Dataset
 
+from .answering import generate_answer
 from .config import Settings
 from .graph import build_dataset, load_dataset
 from .nlp import extract_entities
@@ -77,6 +80,10 @@ class RagRequest(BaseModel):
         if not value.strip():
             raise ValueError("question must not be blank")
         return value
+
+
+class AnswerRequest(RagRequest):
+    pass
 
 
 class VocabularyTerm(BaseModel):
@@ -319,6 +326,42 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def rag_context(request: RagRequest) -> dict[str, object]:
         retrieved = store.search(request.question, request.limit)
         return build_context_packet(retrieved, dataset())
+
+    @app.post("/v1/answer", tags=["retrieval"])
+    def answer(request: AnswerRequest) -> dict[str, object]:
+        retrieved = store.search(request.question, request.limit)
+        if not retrieved:
+            return {"status": "insufficient_evidence", "findings": [], "answer": "No matching podcast evidence was found."}
+        try:
+            generated = generate_answer(request.question, retrieved)
+        except (httpx.HTTPError, ValidationError, KeyError, ValueError) as exc:
+            raise HTTPException(status_code=503, detail="The local answer model is unavailable or returned invalid data") from exc
+        selected = {item["passage_id"]: item for item in retrieved}
+        findings: list[dict[str, object]] = []
+        for item in generated.get("findings", []):
+            passage = selected.get(item.get("passage_id"))
+            if passage is None or not item.get("quote") or item["quote"] not in passage["text"]:
+                continue
+            findings.append({
+                "text": item["text"],
+                "quote": item["quote"],
+                "citation": {
+                    "passage_id": passage["passage_id"],
+                    "source_id": passage["source_id"],
+                    "episode": passage["title"],
+                    "language": passage["language"],
+                    "start": passage["start"],
+                    "end": passage["end"],
+                },
+            })
+        if not findings:
+            return {"status": "insufficient_evidence", "findings": [], "answer": "No verifiable quoted answer could be produced from the matching passages."}
+        return {
+            "status": "answered",
+            "answer": " ".join(f"{item['text']} [{index}]" for index, item in enumerate(findings, 1)),
+            "findings": findings,
+            "note": "Podcast statements are attributed claims, not independently verified facts.",
+        }
 
     @app.post("/v1/sparql", tags=["graph"])
     def sparql(request: SparqlRequest) -> dict[str, object]:
