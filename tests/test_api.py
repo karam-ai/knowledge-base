@@ -246,6 +246,107 @@ def test_answering_limits_model_context_to_relevant_excerpt(monkeypatch) -> None
     assert len(prompt) < 4000
 
 
+def test_answering_disables_thinking_for_structured_findings(monkeypatch) -> None:
+    import podcast_kg.answering as answering
+
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"message": {"content": '{"findings": []}'}}
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def post(self, url, json):
+            captured["payload"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr(answering.httpx, "Client", FakeClient)
+    answering.generate_answer("ontology", [{
+        "passage_id": "p1", "text": "Ontology connects data.", "title": "Episode"
+    }])
+    assert captured["payload"]["think"] is False
+
+
+def test_answering_bounds_generated_tokens(monkeypatch) -> None:
+    import podcast_kg.answering as answering
+
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"message": {"content": '{"findings": []}'}}
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def post(self, url, json):
+            captured["payload"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr(answering.httpx, "Client", FakeClient)
+    answering.generate_answer("ontology", [{
+        "passage_id": "p1", "text": "Ontology connects data.", "title": "Episode"
+    }])
+    assert captured["payload"]["options"]["num_predict"] == 512
+
+
+def test_answering_maps_short_evidence_ids_back_to_real_passages(monkeypatch) -> None:
+    import podcast_kg.answering as answering
+
+    captured = {}
+    full_id = "a" * 64
+
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"message": {"content": '{"findings":[{"text":"The guest connects data.","passage_id":"p1","quote":"connects data"}]}'}}
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def post(self, url, json):
+            captured["payload"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr(answering.httpx, "Client", FakeClient)
+    result = answering.generate_answer("data", [{
+        "passage_id": full_id, "text": "Guest connects data.", "title": "Episode"
+    }])
+    assert '"passage_id": "p1"' in captured["payload"]["messages"][1]["content"]
+    assert result["findings"][0]["passage_id"] == full_id
+
+
 def test_document_upsert_is_idempotent(tmp_path: Path) -> None:
     with client_for(tmp_path) as client:
         first = client.post("/v1/documents", json=sample_document())

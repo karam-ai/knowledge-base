@@ -24,13 +24,16 @@ def generate_answer(question: str, passages: list[dict]) -> dict:
     endpoint = os.getenv("PODCAST_KG_OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
     terms = [term for term in re.findall(r"\w+", question.lower()) if len(term) > 3]
     evidence = []
-    for item in passages:
+    aliases: dict[str, str] = {}
+    for index, item in enumerate(passages, 1):
+        alias = f"p{index}"
+        aliases[alias] = item["passage_id"]
         text = item["text"]
         positions = [text.lower().find(term) for term in terms]
         first = min((position for position in positions if position >= 0), default=0)
         start = max(0, first - 250)
         evidence.append({
-            "passage_id": item["passage_id"], "text": text[start:start + 1200],
+            "passage_id": alias, "text": text[start:start + 1200],
             "title": item["title"],
         })
     prompt = (
@@ -48,8 +51,9 @@ def generate_answer(question: str, passages: list[dict]) -> dict:
             json={
                 "model": model,
                 "stream": False,
+                "think": False,
                 "format": ModelAnswer.model_json_schema(),
-                "options": {"temperature": 0},
+                "options": {"temperature": 0, "num_predict": 512},
                 "messages": [
                     {"role": "system", "content": "Return JSON only. Cite only supplied passages."},
                     {"role": "user", "content": prompt},
@@ -57,4 +61,7 @@ def generate_answer(question: str, passages: list[dict]) -> dict:
             },
         )
         response.raise_for_status()
-    return ModelAnswer.model_validate_json(response.json()["message"]["content"]).model_dump()
+    answer = ModelAnswer.model_validate_json(response.json()["message"]["content"]).model_dump()
+    for finding in answer["findings"]:
+        finding["passage_id"] = aliases.get(finding["passage_id"], "")
+    return answer
