@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Podcast Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bg: #08090a;
+      --color-panel: #0f1011;
+      --color-surface: #191a1b;
+      --color-surface-hover: #28282c;
+      --color-text-primary: #f7f8f8;
+      --color-text-secondary: #d0d6e0;
+      --color-text-tertiary: #8a8f98;
+      --color-text-quaternary: #62666d;
+      --color-accent: #7170ff;
+      --color-accent-hover: #828fff;
+      --color-accent-bg: #5e6ad2;
+      --color-border: rgba(255,255,255,0.08);
+      --color-border-subtle: rgba(255,255,255,0.05);
+      --color-success: #10b981;
+      --color-success-bg: rgba(16,185,129,0.15);
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --shadow-sm: rgba(0,0,0,0.03) 0px 1.2px 0px;
+      --shadow-md: rgba(0,0,0,0.2) 0px 0px 0px 1px;
+      --shadow-lg: rgba(0,0,0,0.4) 0px 2px 4px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-feature-settings: "cv01", "ss03";
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      background: var(--color-panel);
+      border-bottom: 1px solid var(--color-border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--color-text-primary);
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-mark svg {
+      width: 16px;
+      height: 16px;
+      stroke: white;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 510;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 510;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--color-text-primary);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .nav-link.active {
+      color: var(--color-text-primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 510;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--color-accent-bg);
+      color: white;
+      padding: 10px 20px;
+      border-color: transparent;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-accent-hover);
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.02);
+      color: var(--color-text-secondary);
+      padding: 10px 16px;
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.04);
+      color: var(--color-text-primary);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    /* Main content */
+    main {
+      flex: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 24px;
+      width: 100%;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 32px 0 48px;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 510;
+      line-height: 1.0;
+      letter-spacing: -1.056px;
+      margin: 0 0 16px;
+      color: var(--color-text-primary);
+      font-feature-settings: "cv01", "ss03";
+    }
+
+    .hero p {
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--color-text-tertiary);
+      margin: 0 0 32px;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 510;
+      line-height: 1.0;
+      letter-spacing: -0.02em;
+      color: var(--color-text-primary);
+      margin: 0 0 4px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      font-weight: 510;
+      color: var(--color-text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 56px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 590;
+      letter-spacing: -0.24px;
+      margin: 0;
+      color: var(--color-text-primary);
+    }
+
+    .section-description {
+      font-size: 15px;
+      color: var(--color-text-tertiary);
+      margin: 4px 0 0;
+    }
+
+    /* Search */
+    .search-form {
+      display: flex;
+      gap: 12px;
+      max-width: 720px;
+    }
+
+    .search-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px 14px 48px;
+      font-size: 16px;
+      font-family: inherit;
+      color: var(--color-text-primary);
+      outline: none;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .search-input::placeholder {
+      color: var(--color-text-quaternary);
+    }
+
+    .search-input:focus {
+      border-color: var(--color-accent);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-text-quaternary);
+      pointer-events: none;
+    }
+
+    /* Results */
+    .results {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .results.visible {
+      display: flex;
+    }
+
+    .result-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .result-card:hover {
+      border-color: var(--color-border-subtle);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .result-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .result-title {
+      font-size: 15px;
+      font-weight: 590;
+      letter-spacing: -0.01em;
+      color: var(--color-text-primary);
+      margin: 0;
+      flex: 1;
+    }
+
+    .result-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--color-text-quaternary);
+      flex-shrink: 0;
+    }
+
+    .result-timestamp {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      background: rgba(255,255,255,0.04);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .result-language {
+      text-transform: uppercase;
+      font-weight: 510;
+    }
+
+    .result-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+
+    .result-text mark {
+      background: var(--color-accent-bg);
+      color: white;
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    /* Transcript upload */
+    .upload-form {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 720px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 510;
+      color: var(--color-text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--color-text-primary);
+      outline: none;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--color-accent);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .form-input::placeholder {
+      color: var(--color-text-quaternary);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-textarea {
+      min-height: 200px;
+      resize: vertical;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .form-help {
+      font-size: 12px;
+      color: var(--color-text-quaternary);
+      margin-top: 6px;
+    }
+
+    /* SPARQL */
+    .sparql-form {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 900px;
+    }
+
+    .sparql-example {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--color-text-tertiary);
+    }
+
+    .sparql-example code {
+      background: rgba(255,255,255,0.04);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--color-accent);
+    }
+
+    .sparql-textarea {
+      width: 100%;
+      min-height: 180px;
+      background: #08090a;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--color-text-secondary);
+      outline: none;
+      resize: vertical;
+    }
+
+    .sparql-results {
+      margin-top: 24px;
+    }
+
+    .sparql-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .sparql-table th,
+    .sparql-table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .sparql-table th {
+      font-weight: 510;
+      color: var(--color-text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 11px;
+    }
+
+    .sparql-table td {
+      color: var(--color-text-secondary);
+    }
+
+    .sparql-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .sparql-table code {
+      background: rgba(255,255,255,0.04);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12px;
+    }
+
+    /* RAG Context */
+    .rag-form {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 720px;
+    }
+
+    .rag-results {
+      margin-top: 24px;
+    }
+
+    .rag-context {
+      background: rgba(255,255,255,0.01);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-text-tertiary);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    /* Status indicator */
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 510;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-text-quaternary);
+    }
+
+    .status-dot.connected {
+      background: var(--color-success);
+      box-shadow: 0 0 8px var(--color-success);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--color-text-tertiary);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 510;
+      margin: 0 0 8px;
+      color: var(--color-text-secondary);
+    }
+
+    .empty-state p {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    /* Loading */
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-text-tertiary);
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--color-border);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Error */
+    .error-message {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      color: #fca5a5;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--color-panel);
+      border-top: 1px solid var(--color-border-subtle);
+      padding: 24px;
+      margin-top: auto;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-text {
+      font-size: 13px;
+      color: var(--color-text-quaternary);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-link {
+      font-size: 13px;
+      color: var(--color-text-tertiary);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--color-text-primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+        letter-spacing: -0.704px;
+      }
+
+      .hero p {
+        font-size: 16px;
+      }
+
+      .header-inner {
+        flex-wrap: wrap;
+      }
+
+      .nav-links {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+        padding-top: 12px;
+        border-top: 1px solid var(--color-border-subtle);
+        margin-top: 12px;
+      }
+
+      .search-form {
+        flex-direction: column;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-bar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-primary {
+        width: 100%;
+      }
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 4px;
+      max-width: 720px;
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 510;
+      color: var(--color-text-tertiary);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab:hover {
+      color: var(--color-text-secondary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .tab.active {
+      color: var(--color-text-primary);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-inner">
+        <a href="/" class="logo" data-nav="home">
+          <div class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 0 1 10 10c0 2.76-1.12 5.26-2.93 7.07-.28.27-.55.55-.8.85a2.5 2.5 0 0 1-3.58-.42c-.44-.3-.93-.5-1.47-.56-.54.06-1.03.26-1.47.56a2.5 2.5 0 0 1-3.58.42c-.25-.3-.52-.58-.8-.85C3.12 17.26 2 14.76 2 12a10 10 0 0 1 10-10z"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <span class="logo-text">Podcast Intelligence</span>
+        </a>
+        <nav class="nav-links">
+          <a href="#search" class="nav-link active" data-nav="search">Search</a>
+          <a href="#transcripts" class="nav-link" data-nav="transcripts">Transcripts</a>
+          <a href="#sparql" class="nav-link" data-nav="sparql">SPARQL</a>
+          <a href="#rag" class="nav-link" data-nav="rag">RAG Context</a>
+        </nav>
+        <span class="status-indicator">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Checking…</span>
+        </span>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <section class="hero" id="home">
+        <h1>Podcast Intelligence</h1>
+        <p>Search 22,000+ timestamped passages across 1,198 episodes. Query the knowledge graph with SPARQL. Get evidence-grounded RAG context with full provenance.</p>
+        <div class="hero-actions">
+          <a href="#search" class="btn btn-primary">Start Searching</a>
+          <a href="/docs" class="btn btn-ghost" target="_blank">API Reference</a>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-card">
+          <div class="stat-value" id="statDocuments">—</div>
+          <div class="stat-label">Documents</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statPassages">—</div>
+          <div class="stat-label">Passages</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statGraph">—</div>
+          <div class="stat-label">Graph Status</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statLanguages">—</div>
+          <div class="stat-label">Languages</div>
+        </div>
+      </div>
+
+      <!-- Tabs for main features -->
+      <div class="tabs" id="featureTabs" role="tablist" aria-label="Features">
+        <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-search" data-tab="search">Search Passages</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-transcripts" data-tab="transcripts">Upload Transcript</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-sparql" data-tab="sparql">SPARQL Query</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-rag" data-tab="rag">RAG Context</button>
+      </div>
+
+      <!-- Search Panel -->
+      <section class="section tab-panel active" id="panel-search" role="tabpanel" aria-labelledby="tab-search">
+        <div class="section-header">
+          <h2 class="section-title">Search Passages</h2>
+        </div>
+        <form class="search-form" id="searchForm">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="search" class="search-input" id="searchInput" placeholder="Search episodes, speakers, topics…" autocomplete="off" aria-label="Search query">
+          </div>
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+        <div class="results" id="searchResults" role="list" aria-label="Search results"></div>
+        <div class="empty-state" id="searchEmpty" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <h3>No results found</h3>
+          <p>Try a different query or check spelling</p>
+        </div>
+        <div class="loading" id="searchLoading" style="display: none;">
+          <div class="spinner"></div>
+          Searching…
+        </div>
+      </section>
+
+      <!-- Transcript Upload Panel -->
+      <section class="section tab-panel" id="panel-transcripts" role="tabpanel" aria-labelledby="tab-transcripts" style="display: none;">
+        <div class="section-header">
+          <h2 class="section-title">Upload SRT Transcript</h2>
+          <p class="section-description">Ingest a complete episode transcript in SRT format. Each subtitle cue becomes a searchable passage.</p>
+        </div>
+        <form class="upload-form" id="uploadForm" enctype="application/json">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="uploadSourceId">Source ID *</label>
+              <input type="text" class="form-input" id="uploadSourceId" placeholder="lex-fridman-episode-451" required>
+              <p class="form-help">Stable identifier (RSS GUID, YouTube video ID, or publisher episode ID)</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="uploadTitle">Title *</label>
+              <input type="text" class="form-input" id="uploadTitle" placeholder="Episode 451: AI and the Future" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="uploadLanguage">Language *</label>
+              <input type="text" class="form-input" id="uploadLanguage" placeholder="en" required maxlength="32" value="en">
+              <p class="form-help">ISO 639-1 code (en, nl, ar, etc.)</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="uploadSourceUri">Source URL</label>
+              <input type="url" class="form-input" id="uploadSourceUri" placeholder="https://example.com/episodes/451">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="uploadTranscript">SRT Transcript *</label>
+            <textarea class="form-input form-textarea" id="uploadTranscript" placeholder="1
+00:00:05,000 --> 00:00:12,500
+The guest explains the knowledge graph.
+
+2
+00:00:13,000 --> 00:00:20,000
+FastAPI exposes the transcript through an API." required></textarea>
+            <p class="form-help">Paste complete SRT content. Each cue becomes a timestamped passage.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Metadata (JSON, optional)</label>
+            <textarea class="form-input form-textarea" id="uploadMetadata" placeholder='{"podcast": "Lex Fridman Podcast", "published_at": "2026-10-31", "license": "Processing permitted by content owner"}' rows="4"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Ingest Transcript</button>
+          <div class="error-message" id="uploadError" style="display: none;"></div>
+          <div class="loading" id="uploadLoading" style="display: none;">
+            <div class="spinner"></div>
+            Uploading and indexing…
+          </div>
+        </form>
+      </section>
+
+      <!-- SPARQL Panel -->
+      <section class="section tab-panel" id="panel-sparql" role="tabpanel" aria-labelledby="tab-sparql" style="display: none;">
+        <div class="section-header">
+          <h2 class="section-title">SPARQL Query</h2>
+          <p class="section-description">Read-only SELECT and ASK queries against the RDF knowledge graph. Updates are rejected.</p>
+        </div>
+        <div class="sparql-form">
+          <div class="sparql-example">
+            <span>Example:</span>
+            <code>SELECT ?title ?start ?text WHERE { ?p a pkg:Passage ; pkg:title ?title ; pkg:startTime ?start ; pkg:text ?text } LIMIT 10</code>
+          </div>
+          <form id="sparqlForm">
+            <textarea class="sparql-textarea" id="sparqlInput" placeholder="PREFIX pkg: <https://github.com/karam-ai/knowledge-base/ontology#>
+SELECT (COUNT(?p) AS ?count) WHERE { ?p a pkg:Passage }"></textarea>
+            <div style="margin-top: 16px; display: flex; gap: 12px;">
+              <button type="submit" class="btn btn-primary">Execute Query</button>
+              <button type="button" class="btn btn-ghost" id="sparqlClear">Clear</button>
+            </div>
+          </form>
+          <div class="error-message" id="sparqlError" style="display: none;"></div>
+          <div class="loading" id="sparqlLoading" style="display: none;">
+            <div class="spinner"></div>
+            Executing…
+          </div>
+          <div class="sparql-results" id="sparqlResults" style="display: none;"></div>
+        </div>
+      </section>
+
+      <!-- RAG Panel -->
+      <section class="section tab-panel" id="panel-rag" role="tabpanel" aria-labelledby="tab-rag" style="display: none;">
+        <div class="section-header">
+          <h2 class="section-title">RAG Context</h2>
+          <p class="section-description">Ask a question. Get evidence packets with citations from the knowledge graph. No LLM generation—only grounded retrieval.</p>
+        </div>
+        <form class="rag-form" id="ragForm">
+          <div class="form-group">
+            <label class="form-label" for="ragQuestion">Question</label>
+            <input type="text" class="form-input" id="ragQuestion" placeholder="How does Palantir use an ontology?" required style="font-size: 16px;">
+          </div>
+          <div class="form-row" style="align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="ragLimit">Passage limit</label>
+              <input type="number" class="form-input" id="ragLimit" value="5" min="1" max="50" style="width: 120px;">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top: 16px;">Get Evidence</button>
+          <div class="error-message" id="ragError" style="display: none;"></div>
+          <div class="loading" id="ragLoading" style="display: none;">
+            <div class="spinner"></div>
+            Retrieving evidence…
+          </div>
+        </form>
+        <div class="rag-results" id="ragResults" style="display: none;">
+          <h3 style="font-size: 15px; font-weight: 590; margin: 0 0 12px; color: var(--color-text-primary);">Evidence Packet</h3>
+          <pre class="rag-context" id="ragContext"></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <p class="footer-text">Podcast Knowledge Graph API — <a href="https://github.com/karam-ai/knowledge-base" class="footer-link" target="_blank" style="color: inherit;">Open Source</a></p>
+        <div class="footer-links">
+          <a href="/docs" class="footer-link" target="_blank">API Docs</a>
+          <a href="/v1/exports/passages.jsonl" class="footer-link">Export Passages</a>
+          <a href="/v1/exports/graph.nq" class="footer-link">Export Graph</a>
+          <a href="https://github.com/karam-ai/knowledge-base" class="footer-link" target="_blank">GitHub</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Configuration
+    const API_BASE = '';
+    const TAB_PANELS = {
+      search: 'panel-search',
+      transcripts: 'panel-transcripts',
+      sparql: 'panel-sparql',
+      rag: 'panel-rag'
+    };
+
+    // DOM elements
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const tabs = document.querySelectorAll('.tab');
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const searchEmpty = document.getElementById('searchEmpty');
+    const searchLoading = document.getElementById('searchLoading');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadError = document.getElementById('uploadError');
+    const uploadLoading = document.getElementById('uploadLoading');
+    const sparqlForm = document.getElementById('sparqlForm');
+    const sparqlInput = document.getElementById('sparqlInput');
+    const sparqlResults = document.getElementById('sparqlResults');
+    const sparqlError = document.getElementById('sparqlError');
+    const sparqlLoading = document.getElementById('sparqlLoading');
+    const sparqlClear = document.getElementById('sparqlClear');
+    const ragForm = document.getElementById('ragForm');
+    const ragQuestion = document.getElementById('ragQuestion');
+    const ragLimit = document.getElementById('ragLimit');
+    const ragResults = document.getElementById('ragResults');
+    const ragContext = document.getElementById('ragContext');
+    const ragError = document.getElementById('ragError');
+    const ragLoading = document.getElementById('ragLoading');
+
+    // State
+    let activeTab = 'search';
+
+    // Utility functions
+    function showError(element, message) {
+      element.textContent = message;
+      element.style.display = 'block';
+    }
+
+    function hideError(element) {
+      element.style.display = 'none';
+    }
+
+    function showLoading(element) {
+      element.style.display = 'inline-flex';
+    }
+
+    function hideLoading(element) {
+      element.style.display = 'none';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function highlightQuery(text, query) {
+      if (!query) return escapeHtml(text);
+      const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+      let result = escapeHtml(text);
+      for (const term of terms) {
+        const regex = new RegExp(`(${escapeHtml(term)})`, 'gi');
+        result = result.replace(regex, '<mark>$1</mark>');
+      }
+      return result;
+    }
+
+    function formatNumber(n) {
+      return n.toLocaleString();
+    }
+
+    // API functions
+    async function apiGet(path) {
+      const res = await fetch(`${API_BASE}${path}`);
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    }
+
+    async function apiPost(path, body) {
+      const res = await fetch(`${API_BASE}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || `${res.status} ${res.statusText}`);
+      return data;
+    }
+
+    // Status check
+    async function checkStatus() {
+      try {
+        const health = await apiGet('/health');
+        const stats = await apiGet('/v1/stats');
+        statusDot.classList.add('connected');
+        statusText.textContent = 'Connected';
+        updateStats(stats);
+      } catch (e) {
+        statusDot.classList.remove('connected');
+        statusText.textContent = 'Disconnected';
+      }
+    }
+
+    function updateStats(stats) {
+      document.getElementById('statDocuments').textContent = formatNumber(stats.documents || 0);
+      document.getElementById('statPassages').textContent = formatNumber(stats.passages || 0);
+      document.getElementById('statGraph').textContent = stats.graph_available ? 'Ready' : 'Not built';
+      document.getElementById('statLanguages').textContent = '—'; // Not in current stats
+    }
+
+    // Tabs
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        if (tabName === activeTab) return;
+
+        // Update tabs
+        tabs.forEach(t => {
+          t.classList.toggle('active', t.dataset.tab === tabName);
+          t.setAttribute('aria-selected', t.dataset.tab === tabName);
+        });
+
+        // Update panels
+        Object.entries(TAB_PANELS).forEach(([name, id]) => {
+          const panel = document.getElementById(id);
+          panel.classList.toggle('active', name === tabName);
+          panel.style.display = name === tabName ? 'block' : 'none';
+        });
+
+        activeTab = tabName;
+      });
+    });
+
+    // Search
+    searchForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const query = searchInput.value.trim();
+      if (!query) return;
+
+      hideError(uploadError);
+      searchResults.innerHTML = '';
+      searchResults.classList.remove('visible');
+      searchEmpty.style.display = 'none';
+      showLoading(searchLoading);
+
+      try {
+        const data = await apiPost('/v1/search', { query, limit: 20 });
+        hideLoading(searchLoading);
+
+        if (data.passages && data.passages.length > 0) {
+          searchResults.innerHTML = data.passages.map(p => `
+            <article class="result-card" role="listitem">
+              <div class="result-header">
+                <h3 class="result-title">${escapeHtml(p.title)}</h3>
+                <div class="result-meta">
+                  <span class="result-timestamp">${escapeHtml(p.start)}–${escapeHtml(p.end)}</span>
+                  <span class="result-language">${escapeHtml(p.language)}</span>
+                </div>
+              </div>
+              <p class="result-text">${highlightQuery(p.text, query)}</p>
+              <div class="result-actions">
+                <button class="btn btn-ghost btn-sm" onclick="copyCitation('${escapeHtml(p.source_id)}', '${escapeHtml(p.title)}', '${escapeHtml(p.start)}', '${escapeHtml(p.end)}')">Copy Citation</button>
+              </div>
+            </article>
+          `).join('');
+          searchResults.classList.add('visible');
+        } else {
+          searchEmpty.style.display = 'flex';
+        }
+      } catch (err) {
+        hideLoading(searchLoading);
+        showError(uploadError, err.message);
+      }
+    });
+
+    // Upload transcript
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError(uploadError);
+      showLoading(uploadLoading);
+
+      let metadata = {};
+      try {
+        const metaText = document.getElementById('uploadMetadata').value.trim();
+        if (metaText) metadata = JSON.parse(metaText);
+      } catch (err) {
+        hideLoading(uploadLoading);
+        showError(uploadError, 'Invalid JSON in metadata');
+        return;
+      }
+
+      const payload = {
+        source_id: document.getElementById('uploadSourceId').value.trim(),
+        title: document.getElementById('uploadTitle').value.trim(),
+        language: document.getElementById('uploadLanguage').value.trim(),
+        source_uri: document.getElementById('uploadSourceUri').value.trim() || null,
+        metadata,
+        format: 'srt',
+        transcript: document.getElementById('uploadTranscript').value
+      };
+
+      if (!payload.source_id || !payload.title || !payload.language || !payload.transcript) {
+        hideLoading(uploadLoading);
+        showError(uploadError, 'All required fields must be filled');
+        return;
+      }
+
+      try {
+        const data = await apiPost('/v1/transcripts', payload);
+        hideLoading(uploadLoading);
+        uploadForm.reset();
+        showError(uploadError); // reuse for success
+        uploadError.style.background = 'rgba(16,185,129,0.15)';
+        uploadError.style.borderColor = 'rgba(16,185,129,0.3)';
+        uploadError.style.color = '#6ee7b7';
+        uploadError.textContent = `Success! ${data.passage_count} passages created. Graph status: ${data.graph_status}`;
+        setTimeout(() => {
+          uploadError.style.display = 'none';
+          uploadError.style.background = '';
+          uploadError.style.borderColor = '';
+          uploadError.style.color = '';
+        }, 5000);
+        checkStatus();
+      } catch (err) {
+        hideLoading(uploadLoading);
+        showError(uploadError, err.message);
+      }
+    });
+
+    // SPARQL
+    sparqlForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const query = sparqlInput.value.trim();
+      if (!query) return;
+
+      hideError(sparqlError);
+      sparqlResults.style.display = 'none';
+      sparqlResults.innerHTML = '';
+      showLoading(sparqlLoading);
+
+      try {
+        const data = await apiPost('/v1/sparql', { query });
+        hideLoading(sparqlLoading);
+
+        if (data.columns && data.rows) {
+          sparqlResults.innerHTML = `
+            <table class="sparql-table" role="grid">
+              <thead>
+                <tr>${data.columns.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr>
+              </thead>
+              <tbody>
+                ${data.rows.map(row => `
+                  <tr>${data.columns.map(c => `<td><code>${escapeHtml(row[c] ?? '')}</code></td>`).join('')}</tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <p style="margin: 12px 0 0; font-size: 13px; color: var(--color-text-tertiary);">${data.rows.length} row(s) returned</p>
+          `;
+          sparqlResults.style.display = 'block';
+        } else if (data.boolean !== undefined) {
+          sparqlResults.innerHTML = `
+            <div style="padding: 16px; font-size: 18px; font-weight: 510; color: ${data.boolean ? 'var(--color-success)' : 'var(--color-text-tertiary)'};">
+              ${data.boolean ? 'True' : 'False'}
+            </div>
+          `;
+          sparqlResults.style.display = 'block';
+        } else {
+          sparqlResults.innerHTML = '<pre style="font-size: 12px;">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+          sparqlResults.style.display = 'block';
+        }
+      } catch (err) {
+        hideLoading(sparqlLoading);
+        showError(sparqlError, err.message);
+      }
+    });
+
+    sparqlClear.addEventListener('click', () => {
+      sparqlInput.value = '';
+      sparqlResults.style.display = 'none';
+      sparqlResults.innerHTML = '';
+      hideError(sparqlError);
+    });
+
+    // RAG Context
+    ragForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const question = ragQuestion.value.trim();
+      if (!question) return;
+
+      hideError(ragError);
+      ragResults.style.display = 'none';
+      showLoading(ragLoading);
+
+      try {
+        const data = await apiPost('/v1/rag/context', {
+          question,
+          limit: parseInt(ragLimit.value, 10)
+        });
+        hideLoading(ragLoading);
+
+        ragContext.textContent = JSON.stringify(data, null, 2);
+        ragResults.style.display = 'block';
+      } catch (err) {
+        hideLoading(ragLoading);
+        showError(ragError, err.message);
+      }
+    });
+
+    // Citation copy
+    window.copyCitation = function(sourceId, title, start, end) {
+      const citation = `${title}, ${start}–${end}`;
+      navigator.clipboard.writeText(citation).then(() => {
+        const btn = event.target;
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = original, 2000);
+      });
+    };
+
+    // Navigation anchor scroll
+    document.querySelectorAll('[data-nav]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const target = el.getAttribute('href');
+        if (target.startsWith('#')) {
+          e.preventDefault();
+          const tab = target.slice(1);
+          if (TAB_PANELS[tab]) {
+            document.querySelector(`.tab[data-tab="${tab}"]`).click();
+          }
+        }
+      });
+    });
+
+    // Initial load
+    checkStatus();
+  </script>
+</body>
+</html>

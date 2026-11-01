@@ -11,6 +11,7 @@ from typing import Annotated, Any, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from rdflib import Dataset
 
@@ -20,6 +21,8 @@ from .nlp import extract_entities
 from .rag import build_context_packet
 from .source import parse_srt_transcript
 from .storage import Store
+
+FRONTEND_DIR = Path(__file__).parent / "frontend"
 
 READ_QUERY = re.compile(
     r"^(?:\s*(?:PREFIX\s+[^\n]+|BASE\s+[^\n]+)\s*)*(SELECT|ASK)\b",
@@ -111,6 +114,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         license_info={"name": "MIT"},
         lifespan=lifespan,
     )
+
+    if FRONTEND_DIR.exists():
+        app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+        @app.get("/", include_in_schema=False)
+        def serve_frontend() -> FileResponse:
+            return FileResponse(FRONTEND_DIR / "index.html")
 
     def authorize_write(
         x_api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,

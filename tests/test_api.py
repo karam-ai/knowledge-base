@@ -35,6 +35,18 @@ def sample_document() -> dict[str, object]:
     }
 
 
+def test_frontend_is_served_at_root(tmp_path: Path) -> None:
+    with client_for(tmp_path) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "Podcast Intelligence" in response.text
+    assert "/v1/search" in response.text
+    assert "/v1/transcripts" in response.text
+    assert "/v1/sparql" in response.text
+
+
 def test_standalone_api_ingest_search_graph_rag_and_delete(tmp_path: Path) -> None:
     with client_for(tmp_path) as client:
         health = client.get("/health")
